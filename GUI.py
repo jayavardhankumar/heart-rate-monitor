@@ -29,10 +29,10 @@ class GUI(QtWidgets.QMainWindow):
         self.webcam_display.setGeometry(20, 20, 500, 375)
         self.webcam_display.setStyleSheet("background-color: black;")
 
-        # **ROI Preview (Right)**
+        # **ROI Preview (Above Signal Graph)**
         self.roi_display = QtWidgets.QLabel(self)
-        self.roi_display.setGeometry(540, 20, 300, 200)
-        self.roi_display.setStyleSheet("background-color: black;")
+        self.roi_display.setGeometry(540, 180, 300, 100)  # Adjusted position
+        self.roi_display.setStyleSheet("background-color: black; border: 1px solid white;")
 
         # **Heart Rate Display**
         self.heart_rate_label = QtWidgets.QLabel("Heart Rate: -- BPM", self)
@@ -41,12 +41,12 @@ class GUI(QtWidgets.QMainWindow):
 
         # **Graph for Signal**
         self.signal_plot = pg.PlotWidget(self)
-        self.signal_plot.setGeometry(540, 250, 600, 180)
+        self.signal_plot.setGeometry(540, 290, 600, 180)
         self.signal_plot.setLabel("bottom", "Signal")
 
         # **Graph for FFT**
         self.fft_plot = pg.PlotWidget(self)
-        self.fft_plot.setGeometry(540, 450, 600, 180)
+        self.fft_plot.setGeometry(540, 490, 600, 180)
         self.fft_plot.setLabel("bottom", "FFT")
 
         # **Buttons**
@@ -101,9 +101,10 @@ class GUI(QtWidgets.QMainWindow):
         # **Update Webcam Display**
         self.display_image(processed_frame, self.webcam_display)
 
-        # **Update ROI Display**
-        if roi_frame is not None:
-            self.display_image(roi_frame, self.roi_display)
+        # **Update ROI Display Above Signal Graph**
+        if roi_frame is not None and roi_frame.size != 0:
+            roi_resized = cv2.resize(roi_frame, (300, 100))  # Ensure ROI fits in the label
+            self.display_image(roi_resized, self.roi_display)
 
         # **Update Graphs**
         self.signal_plot.clear()

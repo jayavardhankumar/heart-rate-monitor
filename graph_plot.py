@@ -1,18 +1,23 @@
 import pyqtgraph as pg
 import numpy as np
+import cv2
+from PyQt5.QtGui import QImage, QPixmap
+from PyQt5.QtWidgets import QLabel
 
 class GraphPlot:
-    """Handles real-time plotting of signal and FFT data using PyQtGraph."""
+    """Handles real-time plotting of signal and FFT data using PyQtGraph, with ROI preview support."""
 
-    def __init__(self, signal_plot, fft_plot):
+    def __init__(self, signal_plot, fft_plot, roi_label: QLabel):
         """Initializes graph plotting elements.
 
         Args:
             signal_plot (pg.PlotWidget): Widget for displaying the raw signal.
             fft_plot (pg.PlotWidget): Widget for displaying the FFT spectrum.
+            roi_label (QLabel): QLabel widget for displaying the ROI preview.
         """
         self.signal_plot = signal_plot
         self.fft_plot = fft_plot
+        self.roi_label = roi_label  # QLabel to display ROI preview
 
         # Configure signal plot
         self.signal_plot.setBackground("black")
@@ -42,3 +47,21 @@ class GraphPlot:
         """
         if len(freqs) > 0 and len(fft_values) > 0:
             self.fft_curve.setData(freqs, fft_values)
+
+    def update_roi_preview(self, roi):
+        """Updates the ROI preview above the signal graph.
+
+        Args:
+            roi (np.ndarray): Extracted ROI image.
+        """
+        if roi is not None:
+            roi_resized = cv2.resize(roi, (100, 50))  # Resize for better visibility
+            roi_rgb = cv2.cvtColor(roi_resized, cv2.COLOR_BGR2RGB)  # Convert to RGB format
+
+            # Convert OpenCV image to Qt image
+            height, width, channel = roi_rgb.shape
+            bytes_per_line = 3 * width
+            q_image = QImage(roi_rgb.data, width, height, bytes_per_line, QImage.Format_RGB888)
+
+            # Update QLabel with new ROI preview
+            self.roi_label.setPixmap(QPixmap.fromImage(q_image))

@@ -1,11 +1,12 @@
 import cv2
 import dlib
 import logging
+import numpy as np
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 class FaceDetection:
-    """Handles face detection using dlib's face detector."""
+    """Handles face detection using dlib's face detector and extracts ROIs for forehead and cheeks."""
 
     def __init__(self):
         """Initialize the face detector."""
@@ -39,26 +40,31 @@ class FaceDetection:
             largest_face = max(faces, key=lambda f: f[2] * f[3])
             x, y, w, h = largest_face
 
+            # Define ROI coordinates safely
+            def get_roi(x1, x2, y1, y2):
+                """Returns a valid ROI ensuring it does not go out of frame bounds."""
+                x1, x2 = max(0, x1), min(frame.shape[1], x2)
+                y1, y2 = max(0, y1), min(frame.shape[0], y2)
+                roi = frame[y1:y2, x1:x2]
+                return roi if roi.size > 0 else None
+
             # Extract **Forehead ROI**
-            forehead_x1 = x + int(0.3 * w)
-            forehead_x2 = x + int(0.7 * w)
-            forehead_y1 = y + int(0.1 * h)
-            forehead_y2 = y + int(0.25 * h)
-            forehead_roi = frame[forehead_y1:forehead_y2, forehead_x1:forehead_x2]
+            forehead_roi = get_roi(
+                x + int(0.3 * w), x + int(0.7 * w),
+                y + int(0.1 * h), y + int(0.25 * h)
+            )
 
             # Extract **Left Cheek ROI**
-            left_cheek_x1 = x + int(0.05 * w)
-            left_cheek_x2 = x + int(0.3 * w)
-            left_cheek_y1 = y + int(0.5 * h)
-            left_cheek_y2 = y + int(0.75 * h)
-            left_cheek_roi = frame[left_cheek_y1:left_cheek_y2, left_cheek_x1:left_cheek_x2]
+            left_cheek_roi = get_roi(
+                x + int(0.05 * w), x + int(0.3 * w),
+                y + int(0.5 * h), y + int(0.75 * h)
+            )
 
             # Extract **Right Cheek ROI**
-            right_cheek_x1 = x + int(0.7 * w)
-            right_cheek_x2 = x + int(0.95 * w)
-            right_cheek_y1 = y + int(0.5 * h)
-            right_cheek_y2 = y + int(0.75 * h)
-            right_cheek_roi = frame[right_cheek_y1:right_cheek_y2, right_cheek_x1:right_cheek_x2]
+            right_cheek_roi = get_roi(
+                x + int(0.7 * w), x + int(0.95 * w),
+                y + int(0.5 * h), y + int(0.75 * h)
+            )
 
             # Store in dictionary
             rois["forehead"] = forehead_roi
